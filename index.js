@@ -1,11 +1,18 @@
 const express = require('express')
 const nunjucks = require('nunjucks')
 const session = require('express-session')
+const bodyParser = require('body-parser')
 
 const port = 3000
 const dirView = __dirname + '/data/view' // Path to view directory
 
 const app = express()
+
+// Parse http body
+app.use(bodyParser.json()) // to support JSON-encoded bodies
+app.use(bodyParser.urlencoded({ // to support URL-encoded bodies
+    extended: true
+}))
 
 app.use(session({
     secret: 'secret',
@@ -37,6 +44,22 @@ app.get('/secured', (req, res) => {
 
 app.get('/login', (req, res) => {
     res.render('login.html')
+})
+
+app.post('/login', (req, res) => {
+    let post = req.body
+
+    if (post.email === 'developers@example.com' && post.password === 'password123') {
+        req.session.login = true
+        return res.redirect('/secured')
+    } else {
+        res.send('Invalid email or password.')
+    }
+})
+
+app.get('/logout', (req, res) => {
+    req.session.login = false
+    res.redirect('/')
 })
 
 app.listen(port, () => console.log(`App running on http://localhost:${port}`))
